@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Servicios.Usuarios
 {
-    public interface IServiciosUsuarios
+    public interface IUsuarioServicios
     {
         Task<(UsuarioDatosDTO, string)> IniciarSesion(string email, string contrasena);
         Task Insert(UsuarioInsertDTO dto);

@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using Servicios.Paises;
 using Microsoft.OpenApi.Models;
+using Servicios.Preguntas;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -32,21 +33,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
         opts.Events = new JwtBearerEvents
         {
+            // Obtener el token de la cookie
             OnMessageReceived = context =>
             {
-                // Primero intenta obtener el token del encabezado Authorization por swagger...
-                if (context.Request.Headers.ContainsKey("Authorization"))
-                {
-                    var token = context.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
-                    context.Token = token;
-                }
-                else
-                {
-                    context.Token = context.Request.Cookies["jwtToken"];
-                }
+                context.Token = context.Request.Cookies["jwtToken"];
                 return Task.CompletedTask;
             },
 
+            // Personalizar respuesta para cuando falla [Authorize] en controladores
             OnChallenge = async context =>
             {
                 // Evitar respuesta predeterminada
@@ -63,12 +57,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Paises
 builder.Services.AddScoped<IPaisServicios, PaisServicios>();
-
 // Usuarios
-builder.Services.AddScoped<IRepositorioUsuarios, RepositorioUsuarios>();
-builder.Services.AddScoped<IServiciosUsuarios, ServiciosUsuario>();
+builder.Services.AddScoped<IUsuarioRepositorio, UsuarioRepositorio>();
+builder.Services.AddScoped<IUsuarioServicios, UsuarioServicios>();
+// Preguntas
+builder.Services.AddScoped<IPreguntaRepositorio, PreguntaRepositorio>();
+builder.Services.AddScoped<IPreguntaServicios, PreguntaServicios>();
 
 builder.Services.AddControllers();
+
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost",
+        policyBuilder => policyBuilder.WithOrigins("http://localhost:5173") // URL Front
+                                      .AllowAnyMethod()
+                                      .AllowAnyHeader()
+                                      .AllowCredentials()); // Habilita el uso de credenciales (cookies)
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 //builder.Services.AddSwaggerGen(c =>

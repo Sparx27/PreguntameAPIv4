@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 
 namespace Negocio.IRepositorios
 {
-    public interface IRepositorioUsuarios
+    public interface IUsuarioRepositorio
     {
         Task<Usuario?> SelectPorNombreUsuario(string nombreUsuario);
         Task<Usuario?> SelectPorEmail(string email);
+        Task<Usuario?> SelectPorId(Guid usuarioId);
         Task Insert(Usuario u);
         Task UpdateUsuario(Usuario u);
         Task UpdateContrasena(Usuario u, string nuevaContrasena);

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Negocio.Excepciones;
+using PreguntameAPIv4.Utilidades;
 using Servicios.Usuarios;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -13,25 +14,10 @@ namespace PreguntameAPIv4.Controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
-        private readonly IServiciosUsuarios _serviciosUsuarios;
-        public UsuarioController(IServiciosUsuarios serviciosUsuarios)
+        private readonly IUsuarioServicios _serviciosUsuarios;
+        public UsuarioController(IUsuarioServicios serviciosUsuarios)
         {
             _serviciosUsuarios = serviciosUsuarios;
-        }
-
-        private string ObtenerSubEnToken()
-        {
-            var token = HttpContext.Request.Cookies["jwtToken"];
-            string nombreUsuario = "";
-            if (token != null)
-            {
-                var handler = new JwtSecurityTokenHandler();
-                var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
-
-                nombreUsuario = jwtToken?.Claims.FirstOrDefault(claim => claim.Type == "NombreUsuario")?.Value;
-            }
-            if (String.IsNullOrEmpty(nombreUsuario)) throw new UsuarioException("Fallo en la autorización");
-            return nombreUsuario;
         }
 
         [HttpPost("iniciar-sesion")]
@@ -61,13 +47,26 @@ namespace PreguntameAPIv4.Controllers
             }
         }
 
+        [HttpGet("cerrar-sesion")]
+        public IActionResult CerrarSesion()
+        {
+            Tokens.CerrarSesion(Response);
+            return Ok(new { Message = "Sesión cerrada" });
+        }
+
         [Authorize]
         [HttpPatch("datos/actualizar")]
         public async Task<IActionResult> PatchDatosUsuario([FromBody] UsuarioDatosDTO dto)
         {
+            string? nombreUsuario = ObtenerUsuarioEnToken.NombreUsuario(HttpContext);
+            if (String.IsNullOrEmpty(nombreUsuario))
+            {
+                Tokens.CerrarSesion(Response);
+                return Unauthorized("Fallo en la autenticación. Por favor inicie sesión nuevamente");
+            }
+
             try
             {
-                string nombreUsuario = ObtenerSubEnToken();
                 await _serviciosUsuarios.UpdateDatosUsuario(nombreUsuario, dto);
                 return Ok(dto);
             }
@@ -90,9 +89,15 @@ namespace PreguntameAPIv4.Controllers
         [HttpPatch("datos/actualizar-contrasena")]
         public async Task<IActionResult> PatchContrasena([FromBody] CredencialesDTO dto)
         {
+            string? nombreUsuario = ObtenerUsuarioEnToken.NombreUsuario(HttpContext);
+            if (String.IsNullOrEmpty(nombreUsuario))
+            {
+                Tokens.CerrarSesion(Response);
+                return Unauthorized("Fallo en la autenticación. Por favor inicie sesión nuevamente");
+            }
+
             try
             {
-                string nombreUsuario = ObtenerSubEnToken();
                 await _serviciosUsuarios.UpdateContrasena(nombreUsuario, dto.Contrasena);
                 return Ok(new { message = "Contraseña actualizada" });
             }

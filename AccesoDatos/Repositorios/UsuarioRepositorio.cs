@@ -10,10 +10,10 @@ using Negocio.Excepciones;
 
 namespace AccesoDatos.Repositorios
 {
-    public class RepositorioUsuarios : IRepositorioUsuarios
+    public class UsuarioRepositorio : IUsuarioRepositorio
     {
         private readonly PreguntameDBv2Context _context;
-        public RepositorioUsuarios(PreguntameDBv2Context context)
+        public UsuarioRepositorio(PreguntameDBv2Context context)
         {
             _context = context;
         }
@@ -22,6 +22,9 @@ namespace AccesoDatos.Repositorios
 
         public async Task<Usuario?> SelectPorEmail(string email)
             => await _context.Usuarios.Include(u => u.Pais).SingleOrDefaultAsync(u => u.Email == email);
+
+        public async Task<Usuario?> SelectPorId(Guid usuarioId)
+            => await _context.Usuarios.SingleOrDefaultAsync(u => u.UsuarioId == usuarioId);
 
         public async Task Insert(Usuario u)
         {

@@ -20,12 +20,12 @@ using BCrypt.Net;
 
 namespace Servicios.Usuarios
 {
-    public class ServiciosUsuario : IServiciosUsuarios
+    public class UsuarioServicios : IUsuarioServicios
     {
-        private readonly IRepositorioUsuarios _repoUsuarios;
+        private readonly IUsuarioRepositorio _repoUsuarios;
         private readonly IConfiguration _config;
         private readonly IPaisServicios _paisServicios;
-        public ServiciosUsuario(IRepositorioUsuarios repoUsuarios, IConfiguration config, IPaisServicios paisServicios)
+        public UsuarioServicios(IUsuarioRepositorio repoUsuarios, IConfiguration config, IPaisServicios paisServicios)
         {
             _repoUsuarios = repoUsuarios;
             _config = config;
@@ -98,15 +98,16 @@ namespace Servicios.Usuarios
             ValidarUsuario.Activo(u);
 
             UsuarioDatosDTO usuarioInfo = UsuarioMapper.EntidadToDatosDTO(u);
-            string token = GenerarToken(u.NombreUsuario);
+            string token = GenerarToken(u.NombreUsuario, u.UsuarioId.ToString());
             return (usuarioInfo, token);
         }
-        private string GenerarToken(string nombreUsuario)
+        private string GenerarToken(string nombreUsuario, string usuarioId)
         {
             var claims = new[]
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                new Claim("NombreUsuario", nombreUsuario)
+                new Claim("NombreUsuario", nombreUsuario),
+                new Claim("UsuarioId", usuarioId)
             };
 
             string? secret = _config["JWTConfig:Secret"]
