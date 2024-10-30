@@ -9,8 +9,9 @@ namespace Negocio.IRepositorios
 {
     public interface IPreguntaRepositorio
     {
+        Task<Pregunta?> SelectPorId(Guid preguntaId);
         Task<List<Pregunta>> SelectPorUsuarioId(Guid usuarioId);
         Task Insert(Pregunta p);
-        Task Delete(Pregunta p);
+        Task Delete(Guid preguntaId, Guid usuarioId);
     }
 }

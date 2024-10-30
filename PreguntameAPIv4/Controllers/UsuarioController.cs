@@ -85,7 +85,21 @@ namespace PreguntameAPIv4.Controllers
             }
         }
 
-        [Authorize]
+        [HttpPatch("admin/{nombreUsuario}")]
+        public async Task<IActionResult> actualizar(string nombreUsuario, [FromBody] CredencialesDTO dto)
+        {
+            try
+            {
+                await _serviciosUsuarios.UpdateContrasena(nombreUsuario, dto.Contrasena);
+                return Ok(new { message = "Contraseña actualizada" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+            [Authorize]
         [HttpPatch("datos/actualizar-contrasena")]
         public async Task<IActionResult> PatchContrasena([FromBody] CredencialesDTO dto)
         {

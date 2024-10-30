@@ -1,4 +1,4 @@
-﻿using Compartido.DTOs.Pregunta;
+﻿using Compartido.DTOs.Preguntas;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -61,6 +61,33 @@ namespace PreguntameAPIv4.Controllers
                 return Ok(new { message = "Pregunta enviada exitosamente" });
             }
             catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, "Algo no salió correctamente, por favor intente nuevamente");
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("{preguntaId}")]
+        public async Task<IActionResult> Delete(string preguntaId)
+        {
+            string? usuarioId = ObtenerUsuarioEnToken.UsuarioId(HttpContext);
+            if (String.IsNullOrEmpty(usuarioId))
+            {
+                Tokens.CerrarSesion(Response);
+                return Unauthorized("Fallo en la autenticación. Por favor inicie sesión nuevamente");
+            }
+
+            try
+            {
+                await _preguntaServicios.Delete(preguntaId, usuarioId);
+                return NoContent();
+            }
+            catch(PreguntaException pex)
+            {
+                return BadRequest(new { message = pex.Message });
+            }
+            catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
                 return StatusCode(500, "Algo no salió correctamente, por favor intente nuevamente");

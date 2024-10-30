@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Compartido.DTOs.Pregunta
+namespace Compartido.DTOs.Preguntas
 {
     public class PreguntaInsertDTO
     {

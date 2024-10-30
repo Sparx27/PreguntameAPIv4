@@ -1,4 +1,4 @@
-﻿using Compartido.DTOs.Pregunta;
+﻿using Compartido.DTOs.Preguntas;
 using Negocio.IRepositorios;
 using System;
 using System.Collections.Generic;
@@ -29,8 +29,12 @@ namespace Servicios.Preguntas
         public async Task Insert(PreguntaInsertDTO dto)
         {
             if (String.IsNullOrEmpty(dto.UsuarioRecibe)) throw new PreguntaException("Falta el destinatario de la pregunta");
+            dto.Dsc = dto.Dsc.Trim();
             ValidarPregunta.Dsc(dto.Dsc);
             await _preguntaRepo.Insert(PreguntaMapper.InsertToEntidad(dto));
         }
+
+        public async Task Delete(string preguntaId, string usuarioId) => 
+            await _preguntaRepo.Delete(new Guid(preguntaId), new Guid(usuarioId));
     }
 }

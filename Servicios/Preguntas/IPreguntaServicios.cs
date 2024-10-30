@@ -1,4 +1,4 @@
-﻿using Compartido.DTOs.Pregunta;
+﻿using Compartido.DTOs.Preguntas;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,5 +11,6 @@ namespace Servicios.Preguntas
     {
         Task<IEnumerable<PreguntaDTO>> SelectPorUsuarioId(string id);
         Task Insert(PreguntaInsertDTO dto);
+        Task Delete(string preguntaId, string usuarioId);
     }
 }

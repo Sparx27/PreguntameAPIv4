@@ -10,6 +10,7 @@ using System.Text.Json;
 using Servicios.Paises;
 using Microsoft.OpenApi.Models;
 using Servicios.Preguntas;
+using Servicios.Respuestas;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +64,9 @@ builder.Services.AddScoped<IUsuarioServicios, UsuarioServicios>();
 // Preguntas
 builder.Services.AddScoped<IPreguntaRepositorio, PreguntaRepositorio>();
 builder.Services.AddScoped<IPreguntaServicios, PreguntaServicios>();
+// Respuestas
+builder.Services.AddScoped<IRespuestaRepositorio, RespuestaRepositorio>();
+builder.Services.AddScoped<IRespuestaServicios, RespuestaServicios>();
 
 builder.Services.AddControllers();
 

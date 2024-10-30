@@ -1,4 +1,4 @@
-﻿using Compartido.DTOs.Pregunta;
+﻿using Compartido.DTOs.Preguntas;
 using Negocio.Entidades;
 using System;
 using System.Collections.Generic;
@@ -11,14 +11,31 @@ namespace Compartido.Mappers
 {
     public static class PreguntaMapper
     {
+        private static void ThrowError()
+        {
+            throw new PreguntaException("Los datos de la pregunta se encuentran vacíos");
+        }
         public static Pregunta InsertToEntidad(PreguntaInsertDTO dto)
         {
-            if (dto == null) throw new PreguntaException("Los datos de la pregunta se encuentran vacíos");
+            if (dto == null) ThrowError();
             return new Pregunta
             {
                 Dsc = dto.Dsc,
                 UsuarioEnvia = dto.UsuarioEnvia is null ? null : new Guid(dto.UsuarioEnvia),
                 UsuarioRecibe = new Guid(dto.UsuarioRecibe)
+            };
+        }
+
+        public static PreguntaDTO EntidadToDTO(Pregunta pregunta)
+        {
+            if(pregunta == null) ThrowError();
+            return new PreguntaDTO
+            {
+                PreguntaId = pregunta.PreguntaId.ToString(),
+                UsuarioEnvia = pregunta.UsuarioEnvia is null ? null : pregunta.UsuarioEnviaNavigation.NombreUsuario,
+                UsuarioRecibe = pregunta.UsuarioRecibe.ToString(),
+                Dsc = pregunta.Dsc,
+                Fecha = pregunta.Fecha
             };
         }
 
