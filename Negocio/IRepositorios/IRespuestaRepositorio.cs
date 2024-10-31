@@ -13,5 +13,6 @@ namespace Negocio.IRepositorios
         Task<List<Respuesta>> SelectPorUsuarioId(Guid usuarioId);
         Task Insert(Respuesta respuesta, Guid usuarioId);
         Task Delete(Guid respuestaId, Guid usuarioId);
+        Task ToggleInsertMeGusta(Guid respuestaId, Guid usuarioId);
     }
 }

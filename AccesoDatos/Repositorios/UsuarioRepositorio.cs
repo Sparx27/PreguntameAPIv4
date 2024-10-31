@@ -55,5 +55,55 @@ namespace AccesoDatos.Repositorios
             _context.Usuarios.Update(u);
             await _context.SaveChangesAsync();
         }
+
+        public async Task ToggleInsertSeguimiento(Guid usuarioId, Guid usuarioASeguirId)
+        {
+            Usuario? seguidor = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId)
+                ?? throw new Exception("Error en el seguimiento: el usuario que intenta seguir a otro no fue encontrado por su id");
+            Usuario? seguido = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioASeguirId)
+                ?? throw new UsuarioException("El usuario que intenta seguir no existe");
+
+            // Verifica que quien esta dando Seguimiento a otro usuario, si ya lo sigue y en base a eso:
+            // Si no lo sigue, entonces lo quiere seguir y se crea el seguimiento.
+            // Si ya lo sigue, entonces es un escenario en donde lo quiere dejar de seguir.
+            Boolean yaLoSigue = await _context.Seguimientos.AnyAsync(s => s.UsuarioSeguidor == usuarioId && s.UsuarioSeguido == usuarioASeguirId);
+
+            // Acá utilizo una transacción para mantener la atomicidad
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                if(yaLoSigue)
+                {
+                    await _context.Seguimientos.AddAsync(new Seguimiento
+                    {
+                        UsuarioSeguidor = usuarioId,
+                        UsuarioSeguido = usuarioASeguirId
+                    });
+
+                    seguido.Nseguidores++;
+                    _context.Usuarios.Update(seguido);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                else
+                {
+                    Seguimiento? s = await _context.Seguimientos
+                        .FirstOrDefaultAsync(s => s.UsuarioSeguidor == usuarioId && s.UsuarioSeguido == usuarioASeguirId)
+                            ?? throw new Exception("Error, se intentó buscar un seguimiento que supuestamente existía pero no lo encontró");
+
+                    _context.Seguimientos.Remove(s);
+
+                    seguido.Nseguidores--;
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+            }
+            catch(Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
     }
 }

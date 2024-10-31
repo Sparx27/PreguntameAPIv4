@@ -123,5 +123,8 @@ namespace Servicios.Usuarios
                     signingCredentials: creds
                 ));
         }
+
+        public async Task ToggleInsertSeguimiento(string usuarioId, string usuarioASeguirId) => 
+            await _repoUsuarios.ToggleInsertSeguimiento(new Guid(usuarioId), new Guid(usuarioASeguirId));
     }
 }

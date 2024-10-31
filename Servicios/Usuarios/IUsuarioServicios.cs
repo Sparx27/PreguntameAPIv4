@@ -14,5 +14,6 @@ namespace Servicios.Usuarios
         Task Insert(UsuarioInsertDTO dto);
         Task UpdateDatosUsuario(string nombreUsuario, UsuarioDatosDTO dto);
         Task UpdateContrasena(string nombreUsuario, string nuevaContrasena);
+        Task ToggleInsertSeguimiento(string usuarioId, string usuarioASeguirId);
     }
 }

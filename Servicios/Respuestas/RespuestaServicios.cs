@@ -40,5 +40,8 @@ namespace Servicios.Respuestas
 
         public async Task Delete(string respuestaId, string usuarioId) =>
             await _respuestaRepo.Delete(new Guid(respuestaId), new Guid(usuarioId));
+
+        public async Task ToggleMeGusta(string respuestaId, string usuarioId) =>
+            await _respuestaRepo.ToggleInsertMeGusta(new Guid(respuestaId), new Guid(usuarioId));
     }
 }

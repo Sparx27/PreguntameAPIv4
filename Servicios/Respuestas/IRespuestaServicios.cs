@@ -13,5 +13,6 @@ namespace Servicios.Respuestas
         Task<IEnumerable<RespuestaDTO>> SelectPorUsuarioId(string usuarioId);
         Task Insert(RespuestaInsertDTO dto, string usuarioId);
         Task Delete(string respuestaId, string usuarioId);
+        Task ToggleMeGusta(string respuestaId, string usuarioId);
     }
 }

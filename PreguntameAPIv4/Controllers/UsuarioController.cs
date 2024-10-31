@@ -14,10 +14,10 @@ namespace PreguntameAPIv4.Controllers
     [ApiController]
     public class UsuarioController : ControllerBase
     {
-        private readonly IUsuarioServicios _serviciosUsuarios;
+        private readonly IUsuarioServicios _usuarioServicios;
         public UsuarioController(IUsuarioServicios serviciosUsuarios)
         {
-            _serviciosUsuarios = serviciosUsuarios;
+            _usuarioServicios = serviciosUsuarios;
         }
 
         [HttpPost("iniciar-sesion")]
@@ -25,7 +25,7 @@ namespace PreguntameAPIv4.Controllers
         {
             try
             {
-                var res = await _serviciosUsuarios.IniciarSesion(credenciales.Email, credenciales.Contrasena);
+                var res = await _usuarioServicios.IniciarSesion(credenciales.Email, credenciales.Contrasena);
                 Response.Cookies.Append("jwttoken", res.Item2, new CookieOptions
                 {
                     Secure = true,
@@ -67,7 +67,7 @@ namespace PreguntameAPIv4.Controllers
 
             try
             {
-                await _serviciosUsuarios.UpdateDatosUsuario(nombreUsuario, dto);
+                await _usuarioServicios.UpdateDatosUsuario(nombreUsuario, dto);
                 return Ok(dto);
             }
             catch(UsuarioException uex)
@@ -90,7 +90,7 @@ namespace PreguntameAPIv4.Controllers
         {
             try
             {
-                await _serviciosUsuarios.UpdateContrasena(nombreUsuario, dto.Contrasena);
+                await _usuarioServicios.UpdateContrasena(nombreUsuario, dto.Contrasena);
                 return Ok(new { message = "Contraseña actualizada" });
             }
             catch (Exception ex)
@@ -112,7 +112,7 @@ namespace PreguntameAPIv4.Controllers
 
             try
             {
-                await _serviciosUsuarios.UpdateContrasena(nombreUsuario, dto.Contrasena);
+                await _usuarioServicios.UpdateContrasena(nombreUsuario, dto.Contrasena);
                 return Ok(new { message = "Contraseña actualizada" });
             }
             catch(Exception ex)
@@ -126,7 +126,7 @@ namespace PreguntameAPIv4.Controllers
         {
             try
             {
-                await _serviciosUsuarios.Insert(dto);
+                await _usuarioServicios.Insert(dto);
                 return Ok(new { message = "Usuario registrado con éxito, puede iniciar sesión" });
             }
             catch (UsuarioException uex)
@@ -136,6 +136,33 @@ namespace PreguntameAPIv4.Controllers
             catch(ConflictException cex)
             {
                 return Conflict(new { message = cex.Message });
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, new { message = "Algo no salió correctamente, por favor intente nuevamente" });
+            }
+        }
+
+        [Authorize]
+        [HttpGet("seguir-usuario/{usuarioASeguirId}")]
+        public async Task<IActionResult> SeguirUsuario(string usuarioASeguirId)
+        {
+            string? usuarioId = ObtenerUsuarioEnToken.UsuarioId(HttpContext);
+            if (String.IsNullOrEmpty(usuarioId))
+            {
+                Tokens.CerrarSesion(Response);
+                return Unauthorized("Fallo en la autenticación. Por favor inicie sesión nuevamente");
+            }
+
+            try
+            {
+                await _usuarioServicios.ToggleInsertSeguimiento(usuarioId, usuarioASeguirId);
+                return Ok(new { message = "Usuario seguido" });
+            }
+            catch(UsuarioException uex)
+            {
+                return BadRequest(new { message = uex.Message });
             }
             catch(Exception ex)
             {

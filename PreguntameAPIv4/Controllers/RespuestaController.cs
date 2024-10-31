@@ -123,5 +123,32 @@ namespace PreguntameAPIv4.Controllers
             }
         }
 
+        [Authorize]
+        [HttpGet("me-gusta/{respuestaId}")]
+        public async Task<IActionResult> MeGusta(string respuestaId)
+        {
+            string? usuarioId = ObtenerUsuarioEnToken.UsuarioId(HttpContext);
+            if(usuarioId == null)
+            {
+                Tokens.CerrarSesion(Response);
+                return Unauthorized("Fallo en la autenticación. Por favor inicie sesión nuevamente");
+            }
+
+            try
+            {
+                await _respuestaServicios.ToggleMeGusta(respuestaId, usuarioId);
+                return Ok(new { message = "Acción realizada correctamente" });
+            }
+            catch(RespuestaException rex)
+            {
+                return BadRequest(new { message = rex.Message });
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return StatusCode(500, new { message = "Algo no salió correctamente, por favor intente nuevamente" });
+            }
+        }
+
     }
 }

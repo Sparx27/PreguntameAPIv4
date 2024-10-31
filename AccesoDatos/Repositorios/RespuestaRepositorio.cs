@@ -39,7 +39,7 @@ namespace AccesoDatos.Repositorios
             try
             {
                 Pregunta existe = await _preguntaRepo.SelectPorId(respuesta.PreguntaId)
-                    ?? throw new RespuestaException("La pregunta que se intenta responder no existe");
+                    ?? throw new RespuestaException("La pregunta que se intenta responder no respuesta");
 
                 if (existe.UsuarioRecibe != usuarioId) 
                     throw new ForbiddenException("La pregunta que intenta responder, no le pertenece");
@@ -64,14 +64,70 @@ namespace AccesoDatos.Repositorios
         // (No tiene sentido conservar una pregunta si la respuesta se borra)
         public async Task Delete(Guid respuestaId, Guid usuarioId)
         {
-            Respuesta existe = await _context.Respuestas.Include(r => r.Pregunta).FirstOrDefaultAsync(r => r.RespuestaId == respuestaId)
-                ?? throw new RespuestaException("La respuesta que se intenta eliminar no existe");
+            Respuesta? existe = await _context.Respuestas.Include(r => r.Pregunta).FirstOrDefaultAsync(r => r.RespuestaId == respuestaId)
+                ?? throw new RespuestaException("La respuesta que se intenta eliminar no respuesta");
 
             if (existe.Pregunta.UsuarioRecibe != usuarioId) 
                 throw new ForbiddenException("La respuesta que intenta eliminar, no le pertenece");
 
             _context.Respuestas.Remove(existe);
             await _context.SaveChangesAsync();
+        }
+
+        public async Task ToggleInsertMeGusta(Guid respuestaId, Guid usuarioId)
+        {
+            Usuario? u = await _context.Usuarios.FirstOrDefaultAsync(u => u.UsuarioId == usuarioId)
+                ?? throw new Exception("Error: el Usuario autenticado que intenta dar Me Gusta en la Respuesta no fue encontrado");
+            Respuesta? respuesta = await _context.Respuestas
+                .Include(r => r.Pregunta)
+                .ThenInclude(p => p.UsuarioRecibeNavigation)
+                .FirstOrDefaultAsync(r => r.RespuestaId == respuestaId)
+                    ?? throw new RespuestaException("La respuesta a la que se intenta dar Me Gusta no respuesta o fue eliminada");
+
+            MeGusta? yaDioMeGusta = 
+                await _context.MeGustas.FirstOrDefaultAsync(m => m.RespuestaId == respuestaId && m.UsuarioId == usuarioId);
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                Usuario actualizarUsuarioNLikes = respuesta.Pregunta.UsuarioRecibeNavigation;
+
+                if (yaDioMeGusta is not null)
+                {
+                    await _context.MeGustas.AddAsync(new MeGusta
+                    {
+                        RespuestaId = respuestaId,
+                        UsuarioId = usuarioId
+                    });
+
+                    respuesta.Nlikes++;
+                    _context.Respuestas.Update(respuesta);
+
+                    actualizarUsuarioNLikes.Nlikes++;
+                    _context.Usuarios.Update(actualizarUsuarioNLikes);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                else
+                {
+                    _context.MeGustas.Remove(yaDioMeGusta);
+
+                    respuesta.Nlikes--;
+                    _context.Respuestas.Update(respuesta);
+
+                    actualizarUsuarioNLikes.Nlikes--;
+                    _context.Usuarios.Update(actualizarUsuarioNLikes);
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+            }
+            catch(Exception ex)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 }

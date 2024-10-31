@@ -15,5 +15,6 @@ namespace Negocio.IRepositorios
         Task Insert(Usuario u);
         Task UpdateUsuario(Usuario u);
         Task UpdateContrasena(Usuario u, string nuevaContrasena);
+        Task ToggleInsertSeguimiento(Guid usuarioId, Guid usuarioASeguirId);
     }
 }
